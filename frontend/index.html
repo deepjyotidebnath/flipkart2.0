@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flipkart Intelligence Agent — Multi-Agent E-commerce Intelligence</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- Flipkart Header -->
+  <header class="fk-header">
+    <div class="header-container">
+      <div class="brand-area">
+        <div class="fk-logo">
+          <span class="fk-brand">Flipkart</span>
+          <span class="fk-plus">Explore <span class="plus-yellow">Plus</span> ✦</span>
+        </div>
+        <div class="platform-badge">Intelligence Agent</div>
+      </div>
+
+      <nav class="mode-tabs">
+        <button id="tabShopping" class="tab-btn active" onclick="switchTab('shopping')">
+          <span class="icon">🛒</span> AI Shopping Assistant
+        </button>
+        <button id="tabBusiness" class="tab-btn" onclick="switchTab('business')">
+          <span class="icon">📊</span> Business Intelligence Suite
+        </button>
+      </nav>
+
+      <div class="header-actions">
+        <button class="compare-counter-btn" onclick="openCompareDrawer()">
+          ⚖️ Compare (<span id="compareCount">0</span>)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="app-main">
+    <!-- VIEW 1: AI Shopping Assistant -->
+    <section id="shoppingView" class="view-panel active">
+      <div class="assistant-layout">
+        <!-- Chat & Agent Reasoning Section -->
+        <div class="chat-column">
+          <div class="chat-card">
+            <div class="chat-header">
+              <div class="agent-avatar">🤖</div>
+              <div class="agent-info">
+                <h3>Flipkart Multi-Agent Shopping Guide</h3>
+                <p>LangGraph Orchestrated • Hybrid RAG • Verified Reviews</p>
+              </div>
+              <span class="status-pill"><span class="pulse-dot"></span> Online</span>
+            </div>
+
+            <div class="quick-chips" id="quickChips">
+              <button class="chip" onclick="sendQuickPrompt('Best camera phone under ₹30,000')">📸 Best camera phone &lt; ₹30k</button>
+              <button class="chip" onclick="sendQuickPrompt('Compare MacBook Air M2 vs Dell XPS 13')">⚖️ Compare MacBook vs Dell XPS</button>
+              <button class="chip" onclick="sendQuickPrompt('Is Sony WH-1000XM5 worth buying for flights?')">🎧 Sony XM5 noise cancellation?</button>
+              <button class="chip" onclick="sendQuickPrompt('Top rated 4K Smart TVs with Dolby Vision')">📺 Best 4K OLED & LED TVs</button>
+            </div>
+
+            <!-- Messages Stream -->
+            <div class="chat-messages" id="chatMessages">
+              <div class="message-row agent-row">
+                <div class="bubble agent-bubble">
+                  <div class="bubble-header">
+                    <span class="bot-tag">Flipkart Intelligence</span>
+                    <span class="time-stamp">Just now</span>
+                  </div>
+                  <div class="bubble-content">
+                    Namaste! I'm your Flipkart AI Shopping Assistant. I orchestrate specialized agents to find exact matches, compare specs side-by-side, and analyze thousands of buyer reviews. What are you looking to buy today?
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Agent Trace Live Accordion -->
+            <div id="liveAgentTrace" class="agent-trace-box" style="display: none;">
+              <div class="trace-header" onclick="toggleTraceAccordion()">
+                <div class="trace-title">
+                  <span class="trace-icon">⚡</span>
+                  <span>Agent Execution Chain</span>
+                  <span id="traceSummaryCount" class="trace-counter">(3 nodes executed)</span>
+                </div>
+                <span id="traceCaret" class="trace-caret">▼</span>
+              </div>
+              <div id="traceBody" class="trace-body"></div>
+            </div>
+
+            <!-- Chat Input Bar -->
+            <form id="chatForm" class="chat-input-bar" onsubmit="handleChatSubmit(event)">
+              <input
+                type="text"
+                id="chatInput"
+                placeholder="Ask anything... e.g. 'Compare iPhone 15 vs OnePlus 12R' or 'Best laptop for coding under 60k'"
+                autocomplete="off"
+              />
+              <button type="submit" id="chatSendBtn" class="send-btn">
+                <span>Send</span> ➤
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Catalog & Live Recommendations Section -->
+        <div class="catalog-column">
+          <div class="catalog-header-bar">
+            <div class="catalog-title-group">
+              <h3>Catalog & Recommended Products</h3>
+              <p id="catalogSubtitle">Showing top featured items across categories</p>
+            </div>
+            <div class="catalog-filter-group">
+              <select id="catFilter" onchange="filterCatalog()">
+                <option value="">All Categories</option>
+                <option value="Mobiles">Smartphones</option>
+                <option value="Laptops">Laptops</option>
+                <option value="Audio">Audio & TWS</option>
+                <option value="Wearables">Wearables</option>
+                <option value="Appliances">Appliances</option>
+                <option value="Fashion">Fashion</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="products-grid" id="productsGrid">
+            <!-- Dynamically populated product cards -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: E-Commerce Business Intelligence Suite -->
+    <section id="businessView" class="view-panel">
+      <!-- BI Executive KPI Header -->
+      <div class="bi-kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Active Catalog Products</div>
+          <div class="kpi-value" id="kpiProducts">52</div>
+          <div class="kpi-sub positive">Across 6 major Flipkart verticals</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Monthly Gross Merchandise (GMV)</div>
+          <div class="kpi-value" id="kpiGmv">₹219.6 Cr</div>
+          <div class="kpi-sub positive">▲ 14.2% MoM growth</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Average Profit Margin</div>
+          <div class="kpi-value" id="kpiMargin">18.4%</div>
+          <div class="kpi-sub">Net gross margin after discounts</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Price Competitiveness vs Amazon</div>
+          <div class="kpi-value highlight-green" id="kpiPriceAdv">87.5%</div>
+          <div class="kpi-sub positive">Lowest or Parity on market</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Customer Satisfaction Index</div>
+          <div class="kpi-value" id="kpiSentiment">0.82 / 1.0</div>
+          <div class="kpi-sub positive">From verified buyer reviews</div>
+        </div>
+      </div>
+
+      <!-- BI Main Split -->
+      <div class="bi-dashboard-grid">
+        <!-- Left: Interactive Charts -->
+        <div class="bi-charts-column">
+          <!-- Competitor Price Benchmark & Elasticity Simulator -->
+          <div class="dashboard-card">
+            <div class="card-header-flex">
+              <div>
+                <h4>🎯 Dynamic Price Elasticity & Discount Simulator</h4>
+                <p>Simulate demand shifts, gross revenue, and profit maximization based on PED</p>
+              </div>
+              <div class="product-selector-box">
+                <select id="simProductSelect" onchange="runSimulation()">
+                  <!-- Dynamically populated with products -->
+                </select>
+              </div>
+            </div>
+
+            <div class="sim-controls">
+              <div class="slider-control">
+                <div class="slider-label-row">
+                  <span>Simulate Discount Adjustment:</span>
+                  <span id="sliderValDisplay" class="slider-val-badge">0% (Current)</span>
+                </div>
+                <input
+                  type="range"
+                  id="discountDeltaSlider"
+                  min="-20"
+                  max="25"
+                  value="0"
+                  step="1"
+                  oninput="updateSliderDisplay(this.value)"
+                  onchange="runSimulation()"
+                />
+              </div>
+            </div>
+
+            <!-- Simulation KPI readout -->
+            <div class="sim-readout-grid" id="simReadoutGrid">
+              <!-- Dynamically populated simulation result cards -->
+            </div>
+
+            <div class="chart-wrapper">
+              <canvas id="elasticityChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Category Demand Velocity Chart -->
+          <div class="dashboard-card">
+            <div class="card-header-flex">
+              <div>
+                <h4>📈 Category Demand & Monthly GMV Distribution</h4>
+                <p>Volume vs Revenue contribution across Flipkart categories</p>
+              </div>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="categoryTrendsChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Aspect Sentiment Radar / Bar Chart -->
+          <div class="dashboard-card">
+            <div class="card-header-flex">
+              <div>
+                <h4>💬 Aspect-Level Customer Sentiment Mining</h4>
+                <p>AI mined satisfaction scores across verified buyer feedback</p>
+              </div>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="sentimentChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Real-Time Competitor Scan & Inventory Risk -->
+        <div class="bi-intel-column">
+          <!-- Competitor Price Scan Table -->
+          <div class="dashboard-card">
+            <div class="card-header-flex">
+              <div>
+                <h4>⚔️ Real-Time Competitor Price Index</h4>
+                <p>Flipkart vs Amazon & Croma</p>
+              </div>
+              <span class="live-pill">Live Scan</span>
+            </div>
+            <div class="competitor-table-container">
+              <table class="bi-table" id="competitorTable">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Flipkart</th>
+                    <th>Lowest Competitor</th>
+                    <th>Gap</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="competitorTableBody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Inventory Risk Alerts -->
+          <div class="dashboard-card">
+            <div class="card-header-flex">
+              <div>
+                <h4>🚨 Stock-Out Risk & Inventory Velocity</h4>
+                <p>Items burning faster than replenishment timeline</p>
+              </div>
+            </div>
+            <div class="alerts-list" id="inventoryAlertsList">
+              <!-- Populated via API -->
+            </div>
+          </div>
+
+          <!-- BI Agent Strategy Assistant -->
+          <div class="dashboard-card bi-chat-card">
+            <div class="card-header-flex">
+              <div>
+                <h4>🧠 Business Intelligence Agent Query</h4>
+                <p>Ask pricing, competitor, or customer satisfaction questions</p>
+              </div>
+            </div>
+            <div class="bi-quick-chips">
+              <button class="chip" onclick="sendBiQuery('Show competitor pricing and margin elasticity for iPhone 15')">📱 iPhone 15 Price Strategy</button>
+              <button class="chip" onclick="sendBiQuery('What are customer complaints regarding smartphone battery life?')">🔋 Aspect Complaints</button>
+              <button class="chip" onclick="sendBiQuery('Which categories are leading in GMV this month?')">🏆 GMV Leaderboard</button>
+            </div>
+            <div class="bi-chat-response-box" id="biChatResponse">
+              <em>Click any quick insight above or type a merchant strategy prompt.</em>
+            </div>
+            <form class="chat-input-bar" onsubmit="handleBiSubmit(event)">
+              <input type="text" id="biChatInput" placeholder="e.g. 'How should we price laptops against Amazon?'" autocomplete="off" />
+              <button type="submit" class="send-btn">Consult Agent</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Side-by-Side Comparison Modal / Drawer -->
+  <div id="compareModal" class="compare-modal">
+    <div class="modal-overlay" onclick="closeCompareDrawer()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>⚖️ Side-by-Side Product Comparison</h3>
+        <button class="close-btn" onclick="closeCompareDrawer()">✕</button>
+      </div>
+      <div class="modal-body" id="compareModalBody">
+        <p>No products selected yet. Click "+ Compare" on any product card.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
